@@ -181,6 +181,36 @@ Continua: Actualiza con nuevos tickets
 - Todos los datos se almacenan localmente en JSON
 - Las credenciales de Carrefour se encriptan
 
+## 📚 Documentación Completa
+
+### Para Usuarios
+
+- **[QUICK_START.md](QUICK_START.md)** - Guía de inicio rápido
+- **[INSTALL.md](INSTALL.md)** - Instalación y configuración
+- **README.md** (estás aquí) - Descripción general
+
+### Para Desarrolladores
+
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Arquitectura técnica del sistema
+  - Responsabilidades de cada módulo
+  - Flujos de datos y procesamiento
+  - Esquemas de validación
+  - Dependencias entre componentes
+
+- **[DEVELOPMENT_GUIDELINES.md](DEVELOPMENT_GUIDELINES.md)** - Guía de desarrollo
+  - Cómo agregar comandos CLI
+  - Cómo crear nuevas SKILLs
+  - Cómo modificar handler.js
+  - Debugging y troubleshooting
+  - Checklists de calidad
+
+### Otras Referencias
+
+- **[SUMMARY.md](SUMMARY.md)** - Resumen técnico
+- **[STRUCTURE.txt](STRUCTURE.txt)** - Estructura del proyecto
+- **[STATUS.txt](STATUS.txt)** - Estado actual del proyecto
+- **[PROJECT_COMPLETION_REPORT.md](PROJECT_COMPLETION_REPORT.md)** - Reporte final
+
 ## Próximos Pasos
 
 1. Prepara fotos de tickets recientes
@@ -188,7 +218,18 @@ Continua: Actualiza con nuevos tickets
 3. Comienza a registrar compras regularmente
 4. Recibe recomendaciones inteligentes
 
+## Desarrollo
+
+Si quieres contribuir o entender el código:
+
+1. Lee **[ARCHITECTURE.md](ARCHITECTURE.md)** para entender la estructura
+2. Lee **[DEVELOPMENT_GUIDELINES.md](DEVELOPMENT_GUIDELINES.md)** para aprender a hacer cambios
+3. Revisa el código de `handler.js` para ver la lógica core
+4. Corre `npm test` para verificar que todo funciona
+
 ---
 
 **Creado**: 2026-06-05  
-**Última actualización**: 2026-06-05
+**Última actualización**: 2026-06-10  
+**Versión**: 1.0.0  
+**Estado**: ✅ Operativo
