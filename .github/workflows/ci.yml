@@ -1,0 +1,211 @@
+name: CI - Test & Validate
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run tests
+        run: npm test
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-node-${{ matrix.node-version }}
+          path: |
+            test-results/
+            coverage/
+          retention-days: 30
+
+  lint:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Check YAML formatting
+        run: |
+          npm install -g yamllint
+          yamllint .github/workflows/ || true
+      
+      - name: Validate JSON files
+        run: |
+          node -e "
+            const fs = require('fs');
+            const files = ['config.json', 'package.json'];
+            files.forEach(f => {
+              if (fs.existsSync(f)) {
+                try {
+                  JSON.parse(fs.readFileSync(f));
+                  console.log('✅ ' + f + ' is valid JSON');
+                } catch (e) {
+                  console.error('❌ ' + f + ' has JSON errors:', e.message);
+                  process.exit(1);
+                }
+              }
+            });
+          "
+      
+      - name: Check documentation coverage
+        run: |
+          echo "Checking critical documentation files..."
+          required_docs=(
+            "README.md"
+            "ARCHITECTURE.md"
+            "DEVELOPMENT_GUIDELINES.md"
+            "QUICK_REFERENCE.md"
+            "DOCUMENTATION_INDEX.md"
+            ".gitignore"
+            ".env.example"
+          )
+          
+          missing=()
+          for doc in "${required_docs[@]}"; do
+            if [ ! -f "$doc" ]; then
+              missing+=("$doc")
+            fi
+          done
+          
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "❌ Missing documentation files:"
+            printf '%s\n' "${missing[@]}"
+            exit 1
+          fi
+          echo "✅ All critical documentation files present"
+
+  validate-commits:
+    name: Commit Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for commit analysis
+      
+      - name: Validate commit messages
+        run: |
+          echo "Validating commit messages follow conventional commits..."
+          
+          # Get commits in this branch
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            base_sha="${{ github.event.pull_request.base.sha }}"
+          else
+            base_sha="HEAD~1"
+          fi
+          
+          # Check commit format (simplified check)
+          commits=$(git log $base_sha..HEAD --pretty=%B)
+          
+          # Valid prefixes: docs:, chore:, feat:, fix:, refactor:, test:, perf:, style:
+          if echo "$commits" | grep -qE "^(docs|chore|feat|fix|refactor|test|perf|style|ci)(\(.+\))?: .+"; then
+            echo "✅ Commit messages follow conventional commits format"
+          else
+            echo "⚠️  Commit messages don't strictly follow conventional commits"
+            echo "Recommended format: '<type>(<scope>): <description>'"
+            echo "Valid types: docs, chore, feat, fix, refactor, test, perf, style, ci"
+            # Don't fail - just warn
+          fi
+      
+      - name: Check .gitignore protection
+        run: |
+          echo "Verifying .gitignore protects sensitive files..."
+          
+          ignored_patterns=(
+            "\.env"
+            "data/"
+            "\.carrefour-data"
+            "node_modules/"
+            "\.DS_Store"
+            "\.env\.local"
+          )
+          
+          for pattern in "${ignored_patterns[@]}"; do
+            if grep -q "^$pattern" .gitignore; then
+              echo "✅ Pattern '$pattern' found in .gitignore"
+            else
+              echo "⚠️  Pattern '$pattern' may not be in .gitignore"
+            fi
+          done
+
+  summary:
+    name: Build Status
+    runs-on: ubuntu-latest
+    needs: [test, lint, validate-commits]
+    if: always()
+    
+    steps:
+      - name: Check job results
+        run: |
+          if [ "${{ needs.test.result }}" == "success" ] && \
+             [ "${{ needs.lint.result }}" == "success" ] && \
+             [ "${{ needs.validate-commits.result }}" == "success" ]; then
+            echo "✅ All checks passed!"
+            exit 0
+          else
+            echo "❌ Some checks failed"
+            echo "Test result: ${{ needs.test.result }}"
+            echo "Lint result: ${{ needs.lint.result }}"
+            echo "Validate commits result: ${{ needs.validate-commits.result }}"
+            exit 1
+          fi
+      
+      - name: Comment PR on success
+        if: github.event_name == 'pull_request' && success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ **All CI checks passed!**\n\n- Tests: ✅\n- Code quality: ✅\n- Commit validation: ✅\n- Documentation: ✅'
+            })
+      
+      - name: Comment PR on failure
+        if: github.event_name == 'pull_request' && failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '❌ **CI checks failed**\n\nPlease review the workflow logs and fix any issues before requesting review.'
+            })
