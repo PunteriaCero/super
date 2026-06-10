@@ -1,0 +1,32 @@
+{
+  "name": "grocery-tracking-system",
+  "version": "1.0.0",
+  "description": "Sistema inteligente de seguimiento de compras en supermercado",
+  "main": "handler.js",
+  "scripts": {
+    "test": "node test.js",
+    "setup": "bash setup.sh",
+    "process": "node .opencode/skills/grocery-ocr/processor.js",
+    "cli": "node .opencode/skills/grocery-ocr/cli.js",
+    "analyze": "node .opencode/skills/grocery-ocr/cli.js /analyze",
+    "suggest": "node .opencode/skills/grocery-ocr/cli.js /suggest-shopping",
+    "history": "node .opencode/skills/grocery-ocr/cli.js /history",
+    "start": "node .opencode/skills/grocery-ocr/cli.js /help"
+  },
+  "keywords": [
+    "grocery",
+    "shopping",
+    "tracking",
+    "ocr",
+    "tickets",
+    "supermercado"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "optionalDependencies": {
+    "@google-cloud/vision": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=12.0.0"
+  }
+}

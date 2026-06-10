@@ -1,0 +1,44 @@
+{
+  "system": {
+    "name": "Grocery Tracking System",
+    "version": "1.0.0",
+    "workspace": "/workspace/super",
+    "data_dir": "./data",
+    "history_file": "./data/grocery_history.json"
+  },
+  "ocr": {
+    "enabled": true,
+    "method": "cloud-vision",
+    "supported_formats": ["jpg", "jpeg", "png", "pdf"],
+    "max_file_size_mb": 5,
+    "language": "es",
+    "optimization": "minimize-tokens"
+  },
+  "analysis": {
+    "enabled": true,
+    "min_purchases_for_pattern": 2,
+    "min_purchases_for_estimation": 3,
+    "frequency_threshold_percent": 80,
+    "family_size": 4
+  },
+  "carrefour": {
+    "enabled": true,
+    "api_type": "web-scraping",
+    "requires_credentials": true,
+    "auto_sync": false,
+    "supports_historical": true
+  },
+  "storage": {
+    "format": "json",
+    "encryption": "local-only",
+    "backup_enabled": false,
+    "local_path": "./data"
+  },
+  "features": {
+    "pattern_learning": true,
+    "seasonal_detection": true,
+    "price_tracking": true,
+    "quantity_estimation": true,
+    "shopping_suggestions": true
+  }
+}

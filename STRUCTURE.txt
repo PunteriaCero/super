@@ -1,0 +1,273 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║         ESTRUCTURA DEL SISTEMA DE SEGUIMIENTO DE COMPRAS                   ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+/workspace/super/
+│
+├── 📄 ARCHIVOS PRINCIPALES
+│   ├── handler.js ........................... Lógica principal del sistema
+│   ├── test.js ............................. Suite de pruebas (✅ PASA)
+│   ├── package.json ........................ Dependencias Node.js
+│   ├── setup.sh ............................ Script de instalación
+│   └── config.json ......................... Configuración del sistema
+│
+├── 📚 DOCUMENTACIÓN
+│   ├── README.md ........................... Documentación completa
+│   ├── QUICK_START.md ...................... Guía rápida para empezar
+│   ├── INSTALL.md .......................... Instalación y troubleshooting
+│   ├── SUMMARY.md .......................... Este resumen del proyecto
+│   └── STRUCTURE.txt ....................... Estructura actual (este archivo)
+│
+├── 💾 DATOS Y CONFIGURACIÓN
+│   ├── data/
+│   │   └── grocery_history.json ........... Base de datos (JSON local)
+│   ├── tickets/ ........................... Carpeta para fotos de tickets
+│   └── .setup.json ........................ Configuración del setup
+│
+└── 🔧 SKILLs DEL AGENTE
+    └── .opencode/skills/
+        │
+        ├── grocery-ocr/ .................. SKILL: Procesar Tickets (OCR)
+        │   ├── SKILL.md .................. Documentación de la SKILL
+        │   ├── cli.js .................... Interfaz de comandos
+        │   ├── ocr-processor.js .......... Motor OCR (Tesseract/Vision)
+        │   ├── ticket-parser.js .......... Parser de datos de tickets
+        │   └── processor.js .............. Pipeline completo OCR→Parser→BD
+        │
+        ├── grocery-analyzer/ ............. SKILL: Análisis y Estimación
+        │   └── SKILL.md .................. Documentación
+        │
+        └── carrefour-integration/ ........ SKILL: Carrefour (Preparado)
+            └── SKILL.md .................. Documentación
+
+
+════════════════════════════════════════════════════════════════════════════
+
+FLUJO DE DATOS
+
+1. ENTRADA (Usuario adjunta foto)
+        ↓
+2. OCR (Extrae texto de la imagen)
+        ↓
+3. PARSING (Identifica productos y precios)
+        ↓
+4. VALIDACIÓN (Verifica calidad de datos)
+        ↓
+5. ALMACENAMIENTO (Guarda en grocery_history.json)
+        ↓
+6. ANÁLISIS (Actualiza patrones)
+        ↓
+7. SUGERENCIAS (Estima qué comprar)
+        ↓
+8. SALIDA (Muestra al usuario)
+
+
+════════════════════════════════════════════════════════════════════════════
+
+COMPONENTES PRINCIPALES
+
+┌─────────────────────────────────────────────────────────────┐
+│ CLI (cli.js)                                                │
+│ ├─ /process-ticket-image                                   │
+│ ├─ /suggest-shopping                                        │
+│ ├─ /analyze-purchases                                       │
+│ ├─ /view-purchase-history                                  │
+│ └─ /help                                                    │
+└─────────────────────────────────────────────────────────────┘
+                         ↓
+┌─────────────────────────────────────────────────────────────┐
+│ Processor (processor.js)                                     │
+│ ├─ processTicketImage()                                     │
+│ ├─ suggestNextShopping()                                    │
+│ └─ analyzePatterns()                                        │
+└─────────────────────────────────────────────────────────────┘
+                         ↓
+        ┌────────────────┴────────────────┐
+        ↓                                 ↓
+┌──────────────────┐         ┌──────────────────────┐
+│ OCR              │         │ Parser               │
+│ (ocr-processor)  │         │ (ticket-parser)      │
+│                  │         │                      │
+│ • Tesseract      │         │ • Extrae productos   │
+│ • Vision API     │         │ • Identifica precios │
+│ • Fallback       │         │ • Categoriza items   │
+│ • Manejo errores │         │ • Valida datos       │
+└──────────────────┘         └──────────────────────┘
+        ↓                                 ↓
+        └────────────────┬────────────────┘
+                         ↓
+        ┌─────────────────────────────────┐
+        │ Handler (handler.js)            │
+        │ ├─ loadHistory()                │
+        │ ├─ saveHistory()                │
+        │ ├─ addPurchase()                │
+        │ ├─ updatePatterns()             │
+        │ ├─ estimateMissingProducts()    │
+        │ └─ showSummary()                │
+        └─────────────────────────────────┘
+                         ↓
+        ┌─────────────────────────────────┐
+        │ Base de Datos (JSON)            │
+        │ data/grocery_history.json       │
+        │                                 │
+        │ • purchases[]                   │
+        │ • product_patterns{}            │
+        │ • seasonal_trends{}             │
+        │ • metadata                      │
+        └─────────────────────────────────┘
+
+
+════════════════════════════════════════════════════════════════════════════
+
+ALGORITMO DE ESTIMACIÓN
+
+┌──────────────────────────────────────────────────────────────┐
+│ Para cada producto:                                          │
+│                                                              │
+│ 1. Obtener último día de compra                             │
+│ 2. Calcular días desde última compra                        │
+│ 3. Obtener frecuencia histórica (días entre compras)        │
+│ 4. Calcular umbral = frecuencia × 0.80                     │
+│ 5. Si días ≥ umbral:                                       │
+│    ✓ Sugerir compra                                         │
+│    ✓ Cantidad = promedio histórico                          │
+│    ✓ Precio = precio promedio                               │
+│    ✓ Mostrar recomendación                                  │
+└──────────────────────────────────────────────────────────────┘
+
+
+════════════════════════════════════════════════════════════════════════════
+
+ESTRUCTURA DE DATOS (grocery_history.json)
+
+{
+  "metadata": {
+    "version": "1.0",
+    "created": "2024-06-05",
+    "family_members": 4,
+    "composition": "1 hombre, 1 mujer, 2 chicos",
+    "last_updated": "2024-06-05"
+  },
+  
+  "purchases": [
+    {
+      "id": 1717594800000,
+      "date": "2024-06-05",
+      "source": "ocr|carrefour|manual",
+      "store": "Carrefour",
+      "items": [
+        {
+          "name": "Leche",
+          "quantity": 2,
+          "unit": "L",
+          "price": 1.50,
+          "category": "dairy"
+        }
+      ],
+      "total": 45.50
+    }
+  ],
+  
+  "product_patterns": {
+    "leche": {
+      "name": "Leche",
+      "purchases": [...],
+      "avg_quantity": 2,
+      "avg_price": 1.50,
+      "frequency_days": 7
+    }
+  },
+  
+  "seasonal_trends": {
+    "enero": {
+      "category": "Bebidas",
+      "increase": 30
+    }
+  },
+  
+  "carrefour_credentials": {
+    "email": "xxx@example.com",
+    "password": "encrypted",
+    "last_sync": null
+  }
+}
+
+
+════════════════════════════════════════════════════════════════════════════
+
+COMANDOS DISPONIBLES
+
+📷 Procesar Tickets:
+   /process-ticket-image ./tickets/ticket.jpg
+
+💡 Obtener Recomendaciones:
+   /suggest-shopping
+   /analyze-purchases
+
+📊 Ver Información:
+   /view-purchase-history
+   /summary
+   /help
+
+🔧 Mantenimiento:
+   /reset (+ /reset-confirm)
+
+
+════════════════════════════════════════════════════════════════════════════
+
+ESTADO DEL PROYECTO
+
+✅ COMPLETADO:
+  • OCR de tickets (Tesseract/Vision API)
+  • Parser de datos
+  • Almacenamiento JSON
+  • Análisis de patrones
+  • Estimación de compras
+  • CLI funcional
+  • Pruebas (test.js)
+  • Documentación completa
+
+🔧 PREPARADO PARA:
+  • Integración con Carrefour
+  • Otras plataformas de supermercados
+  • Alertas de precios
+  • Comparación de precios
+  • Integración WhatsApp/Email
+
+⏳ FUTURO:
+  • Dashboard web
+  • Análisis de gastos
+  • Predicción de consumo
+  • Recomendaciones inteligentes
+
+
+════════════════════════════════════════════════════════════════════════════
+
+REQUISITOS DEL SISTEMA
+
+Obligatorios:
+  • Node.js ≥12.0.0
+
+Recomendados:
+  • Tesseract OCR (para procesamiento local)
+  • Google Cloud SDK (para fallback)
+
+Instalación rápida:
+  $ bash setup.sh
+
+
+════════════════════════════════════════════════════════════════════════════
+
+PRÓXIMOS PASOS
+
+1. Lee QUICK_START.md
+2. Adjunta tu primer ticket
+3. Sistema procesará automáticamente
+4. Obtén recomendaciones después de 3-4 tickets
+5. Luego podemos agregar más features
+
+
+════════════════════════════════════════════════════════════════════════════
+
+Sistema completamente operativo y listo para usar 🚀
+
